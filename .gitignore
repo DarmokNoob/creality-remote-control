@@ -1,0 +1,9 @@
+# Large/generated slice files - don't version these
+print-queue/*.cxdlp
+
+# Test/scratch scripts
+test_adb.py
+
+# Python
+__pycache__/
+*.pyc

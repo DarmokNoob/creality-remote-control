@@ -9,7 +9,7 @@
    
    	<body onload="onPageLoad()">
     	<div id = "sse">
-			URL: <input type=text value="ws://192.168.29.223:18188/" id="url">
+			URL: <input type=text value="ws://10.168.113.245:18188/" id="url">
 			password: <input type=text value="0" id="password">
         	<input type=submit value="Connect" onClick="javascript:connect()">
         	<input type=submit value="Disconnect" onClick="javascript:disconnect()">
@@ -18,7 +18,12 @@
 			File upload: <input type="file" id="inputFile" />
         	<input type=submit value="Upload" onClick="javascript:uploadFile()">
       	</div><br>
-      	<div id = "cmds">
+      	<div id = "usbFiles">
+                <b>USB Drive Files:</b>
+                <input type=submit value="Refresh List" onClick="javascript:loadUsbFiles()">
+                <div id="usbFileList"></div>
+	</div><br>
+	<div id = "cmds">
         	<input type=submit value="Print" onClick="javascript:startPrint()">
         	<input type=submit value="Pause" onClick="javascript:sendCmd('PRINT_PAUSE')">
         	<input type=submit value="Stop" onClick="javascript:stopPrint()">
@@ -29,7 +34,6 @@
 		<br>
 		Source: <a href="https://github.com/danielkucera/creality-remote-control">https://github.com/danielkucera/creality-remote-control</a><br>
 		<script type = "text/javascript">
-			var ws;
 			var stat;
 			var statusTimer;
 			var file;
@@ -255,6 +259,47 @@
 
 				updateParamsFromHash();
 			}
+			
+			function loadUsbFiles(){
+                                Promise.all([
+                                        fetch('/api/usb-files').then(r => r.json()),
+                                        fetch('/api/udisk-files').then(r => r.json())
+                                ])
+                                .then(([usbFiles, udiskFiles]) => {
+                                        var listDiv = document.getElementById('usbFileList');
+                                        listDiv.innerHTML = '';
+                                        usbFiles.forEach(function(name){
+                                                var loaded = udiskFiles.includes(name);
+                                                var btn = document.createElement('input');
+                                                btn.type = 'submit';
+                                                btn.value = (loaded ? "\u2705 " : "") + name;
+                                                if (loaded) {
+                                                        btn.style.backgroundColor = '#a0ffa0';
+                                                        btn.style.fontWeight = 'bold';
+                                                }
+                                                btn.onclick = function(){ loadFileToQueue(name); };
+                                                listDiv.appendChild(btn);
+                                                listDiv.appendChild(document.createElement('br'));
+                                        });
+                                });
+                        }
+                        function loadFileToQueue(name){
+                                if (!confirm("Load '" + name + "' from USB into the printer's queue?\n\nThis will replace any file currently loaded.")) return;
+                                fetch('/api/load-file', {
+                                        method: 'POST',
+                                        headers: {'Content-Type': 'application/json'},
+                                        body: JSON.stringify({filename: name})
+                                })
+                                .then(r => r.json())
+                                .then(result => {
+                                        if (result.error) {
+                                                alert("Error: " + result.error);
+                                        } else {
+                                                alert("Loaded: " + result.filename + "\nUse the printer's touchscreen or Print List to start it.");
+                                                loadUsbFiles();
+                                        }
+                                });
+                        }
 
 		</script>
    	</body>
