@@ -13,7 +13,27 @@
 			.camera-box { border: 2px solid #ccc; border-radius: 8px; padding: 10px; background: #f5f5f5; }
 			.camera-box img { max-width: 640px; width: 100%; border-radius: 4px; display: block; }
 			input[type=submit] { cursor: pointer; }
-			#usbFileList input[type=submit] { display: block; margin-bottom: 4px; text-align: left; width: 100%; }
+
+			.file-list {
+					max-height: 400px;
+					overflow-y: auto;
+					border: 1px solid #ccc;
+					border-radius: 6px;
+					margin-top: 8px;
+			}
+			.file-item {
+					padding: 8px 12px;
+					cursor: pointer;
+					border-bottom: 1px solid #eee;
+					font-size: 14px;
+			}
+			.file-item:last-child { border-bottom: none; }
+			.file-item:hover { background: #eef4ff; }
+			.file-item.loaded {
+					background: #a0ffa0;
+					font-weight: bold;
+			}
+			.file-item.loaded:hover { background: #8ef08e; }
 		</style>
    	</head>
    
@@ -31,9 +51,9 @@
 				<input type=submit value="Upload" onClick="javascript:uploadFile()">
 			</div><br>
 			<div id = "usbFiles">
-				<b>USB Drive Files:</b>
-				<input type=submit value="Refresh List" onClick="javascript:loadUsbFiles()">
-				<div id="usbFileList"></div>
+					<b>USB Drive Files:</b>
+					<input type=submit value="Refresh List" onClick="javascript:loadUsbFiles()">
+					<div id="usbFileList" class="file-list"></div>
 			</div><br>
 			<div id = "cmds">
 				<input type=submit value="Print" onClick="javascript:startPrint()">
@@ -283,28 +303,24 @@
 			}
 			
 			function loadUsbFiles(){
-            	Promise.all([
-					fetch('/api/usb-files').then(r => r.json()),
-					fetch('/api/udisk-files').then(r => r.json())
-					])
-					.then(([usbFiles, udiskFiles]) => {
-					var listDiv = document.getElementById('usbFileList');
-					listDiv.innerHTML = '';
-					usbFiles.forEach(function(name){
-					var loaded = udiskFiles.includes(name);
-					var btn = document.createElement('input');
-					btn.type = 'submit';
-					btn.value = (loaded ? "\u2705 " : "") + name;
-					if (loaded) {
-						btn.style.backgroundColor = '#a0ffa0';
-						btn.style.fontWeight = 'bold';
-					}
-					btn.onclick = function(){ loadFileToQueue(name); };
-					listDiv.appendChild(btn);
-					listDiv.appendChild(document.createElement('br'));
+					Promise.all([
+							fetch('/api/usb-files').then(r => r.json()),
+							fetch('/api/udisk-files').then(r => r.json())
+							])
+							.then(([usbFiles, udiskFiles]) => {
+							var listDiv = document.getElementById('usbFileList');
+							listDiv.innerHTML = '';
+							usbFiles.forEach(function(name){
+									var loaded = udiskFiles.includes(name);
+									var item = document.createElement('div');
+									item.className = 'file-item' + (loaded ? ' loaded' : '');
+									item.textContent = (loaded ? "\u2705 " : "") + name;
+									item.onclick = function(){ loadFileToQueue(name); };
+									listDiv.appendChild(item);
+							});
 					});
-				});
 			}
+			
 			function loadFileToQueue(name){
 				if (!confirm("Load '" + name + "' from USB into the printer's queue?\n\nThis will replace any file currently loaded.")) return;
         		fetch('/api/load-file', {
