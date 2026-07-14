@@ -5,32 +5,54 @@
 		<title>Creality Halot Remote Control</title>
 		<script src="https://cdnjs.cloudflare.com/ajax/libs/pako/2.1.0/pako.min.js" integrity="sha512-g2TeAWw5GPnX7z0Kn8nFbYfeHcvAu/tx6d6mrLe/90mkCxO+RcptyYpksUz35EO337F83bZwcmUyHiHamspkfg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 		<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.js" integrity="sha512-NQVmLzNy4Lr5QTrmXvq/WzTMUnRHmv7nyIT/M6LyGPBS+TIeRxZ+YQaqWxjpRpvRMQSuYPQURZz/+pLi81xXeA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+		<style>
+			body { font-family: sans-serif; margin: 20px; }
+			.main-layout { display: flex; gap: 30px; align-items: flex-start; flex-wrap: wrap; }
+			.left-column { flex: 1; min-width: 400px; }
+			.right-column { flex: 0 0 auto; }
+			.camera-box { border: 2px solid #ccc; border-radius: 8px; padding: 10px; background: #f5f5f5; }
+			.camera-box img { max-width: 640px; width: 100%; border-radius: 4px; display: block; }
+			input[type=submit] { cursor: pointer; }
+			#usbFileList input[type=submit] { display: block; margin-bottom: 4px; text-align: left; width: 100%; }
+		</style>
    	</head>
    
    	<body onload="onPageLoad()">
-    	<div id = "sse">
-			URL: <input type=text value="ws://10.168.113.245:18188/" id="url">
-			password: <input type=text value="0" id="password">
-        	<input type=submit value="Connect" onClick="javascript:connect()">
-        	<input type=submit value="Disconnect" onClick="javascript:disconnect()">
-      	</div><br>
-      	<div id = "fileCmds">
-			File upload: <input type="file" id="inputFile" />
-        	<input type=submit value="Upload" onClick="javascript:uploadFile()">
-      	</div><br>
-      	<div id = "usbFiles">
-                <b>USB Drive Files:</b>
-                <input type=submit value="Refresh List" onClick="javascript:loadUsbFiles()">
-                <div id="usbFileList"></div>
-	</div><br>
-	<div id = "cmds">
-        	<input type=submit value="Print" onClick="javascript:startPrint()">
-        	<input type=submit value="Pause" onClick="javascript:sendCmd('PRINT_PAUSE')">
-        	<input type=submit value="Stop" onClick="javascript:stopPrint()">
-      	</div><br>
-      	<div id = "fileStatus"></div><br>
-      	<div id = "status"></div><br>
-      	<div id = "log" style="font-size:11px;"></div>
+	<div class="main-layout">
+		<div class="left-column">
+			<div id = "sse">
+				URL: <input type=text value="ws://10.168.113.245:18188/" id="url">
+				password: <input type=text value="0" id="password">
+				<input type=submit value="Connect" onClick="javascript:connect()">
+				<input type=submit value="Disconnect" onClick="javascript:disconnect()">
+			</div><br>
+			<div id = "fileCmds">
+				File upload: <input type="file" id="inputFile" />
+				<input type=submit value="Upload" onClick="javascript:uploadFile()">
+			</div><br>
+			<div id = "usbFiles">
+				<b>USB Drive Files:</b>
+				<input type=submit value="Refresh List" onClick="javascript:loadUsbFiles()">
+				<div id="usbFileList"></div>
+			</div><br>
+			<div id = "cmds">
+				<input type=submit value="Print" onClick="javascript:startPrint()">
+				<input type=submit value="Pause" onClick="javascript:sendCmd('PRINT_PAUSE')">
+				<input type=submit value="Stop" onClick="javascript:stopPrint()">
+			</div><br>
+		</div>
+
+		<div class="right-column">
+			<div class="camera-box">
+				<b>Camera Feed</b><br>
+				<img id="cameraFeed" src="http://10.168.113.245:8081/?action=stream">
+			</div>
+		</div>
+	</div>
+
+	<div id = "fileStatus"></div><br>
+	<div id = "status"></div><br>
+	<div id = "log" style="font-size:11px;"></div>
 		<br>
 		Source: <a href="https://github.com/danielkucera/creality-remote-control">https://github.com/danielkucera/creality-remote-control</a><br>
 		<script type = "text/javascript">
