@@ -7,3 +7,4 @@ test_adb.py
 # Python
 __pycache__/
 *.pyc
+deploy.sh
