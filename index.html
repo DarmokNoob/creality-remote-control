@@ -42,8 +42,8 @@
 			a { color: var(--link); }
 
 			.main-layout { display: flex; gap: 30px; align-items: flex-start; flex-wrap: wrap; }
-			.left-column { flex: 1; min-width: 400px; }
-			.right-column { flex: 0 0 auto; width: 320px; }
+			.left-column { flex: 1; min-width: 350px; }
+			.right-column { flex: 0 0 auto; width: 480px; }
 
 			.panel {
 				border: 2px solid var(--border);
@@ -60,6 +60,28 @@
 				border-radius: 4px;
 				display: block;
 				background: #000;
+			}
+
+			.camera-box img {
+				cursor: pointer;
+			}
+
+			.lightbox-overlay {
+				display: none;
+				position: fixed;
+				top: 0; left: 0;
+				width: 100%; height: 100%;
+				background: rgba(0, 0, 0, 0.9);
+				z-index: 1000;
+				align-items: center;
+				justify-content: center;
+				cursor: pointer;
+			}
+			.lightbox-overlay.active { display: flex; }
+			.lightbox-overlay img {
+				max-width: 95%;
+				max-height: 95%;
+				border-radius: 4px;
 			}
 
 			.preview-filename {
@@ -125,6 +147,9 @@
    	</head>
    
    	<body onload="onPageLoad()">
+	<div class="lightbox-overlay" id="lightboxOverlay" onclick="closeLightbox()">
+		<img id="lightboxImg">
+	</div>
 	<div class="main-layout">
 		<div class="left-column">
 			<div id = "sse">
@@ -147,6 +172,10 @@
 				<input type=submit value="Pause" onClick="javascript:sendCmd('PRINT_PAUSE')">
 				<input type=submit value="Stop" onClick="javascript:stopPrint()">
 			</div><br>
+			
+			<div id = "fileStatus"></div><br>
+			<div id = "status"></div><br>
+			<div id = "log" style="font-size:11px;"></div>
 		</div>
 
 		<div class="right-column">
@@ -160,14 +189,10 @@
 
 			<div class="panel camera-box">
 				<b>Camera Feed</b><br>
-				<img id="cameraFeed">
+				<img id="cameraFeed" onclick="openLightbox()">
 			</div>
 		</div>
 	</div>
-
-	<div id = "fileStatus"></div><br>
-	<div id = "status"></div><br>
-	<div id = "log" style="font-size:11px;"></div>
 		<br>
 		Fork by <a href="https://github.com/DarmokNoob/creality-remote-control">DarmokNoob</a> — originally forked from <a href="https://github.com/danielkucera/creality-remote-control">danielkucera/creality-remote-control</a><br>
 		<script type = "text/javascript">
@@ -456,6 +481,7 @@
 					}
 				});
 			}
+
 			function loadFileToQueue(name){
 				if (!confirm("Load '" + name + "' from USB into the printer's queue?\n\nThis will replace any file currently loaded.")) return;
         		fetch('/api/load-file', {
@@ -473,7 +499,16 @@
 					loadUsbFiles();
                 	}
         		});
-			}		
+			}
+			
+			function openLightbox(){
+				document.getElementById('lightboxImg').src = document.getElementById('cameraFeed').src;
+				document.getElementById('lightboxOverlay').classList.add('active');
+			}
+
+			function closeLightbox(){
+				document.getElementById('lightboxOverlay').classList.remove('active');
+			}
 		</script>
    	</body>
 </html>
