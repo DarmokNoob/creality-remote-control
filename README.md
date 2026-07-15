@@ -43,20 +43,27 @@ you're hitting the printer directly by IP or hostname.
 ## Repository layout
 
 ```
-main.go            — the Go server (build for the printer's actual
-                      architecture: 32-bit ARM, EABI5 — see build notes below)
-index.html          — the frontend, served by halot-server
+go-server/          — main.go, the Go server source
+index.html           — the frontend, served by halot-server
 bin/                — pre-built mjpg_streamer + its input_uvc/output_http
                       plugins (armhf, statically matched to the printer's
-                      old glibc — see printer-init/README.md for why these
-                      can't just be `apt install`ed)
-printer-init/       — start_streamer.sh + deployment instructions for
-                      getting mjpg_streamer running persistently on boot
+                      old glibc — see printer-init/mjpg-README.md for why
+                      these can't just be `apt install`ed)
+www/                — mjpg-streamer's own viewer assets. Despite the name
+                      suggesting a static landing page, this is actually
+                      required by the streamer's output_http plugin for
+                      the ?action=stream endpoint itself to function, not
+                      just the unused default page at :8081/ — confirmed
+                      by testing without it, which broke the live feed
+                      entirely.
+printer-init/       — start.sh + mjpg-README.md (camera-specific setup
+                      decisions: why S80camera is disabled, why rc.local
+                      instead of rc.d/procd, port choice, BusyBox gotchas)
 docs/
   rooting-guide.md        — how root SSH access was obtained via ADB
   touch-injection-notes.md — investigation into remotely clearing a
                              stuck print-end screen (documented dead end,
-                             kept for reference)
+                             worked around via the reboot endpoint instead)
 ```
 
 ## Building halot-server
