@@ -128,7 +128,7 @@
 	<div class="main-layout">
 		<div class="left-column">
 			<div id = "sse">
-				URL: <input type=text value="ws://localhost:18188/" id="url">
+				URL: <input type=text value="" id="url">
 				password: <input type=text value="0" id="password">
 				<input type=submit value="Connect" onClick="javascript:connect()">
 				<input type=submit value="Disconnect" onClick="javascript:disconnect()">
@@ -160,7 +160,7 @@
 
 			<div class="panel camera-box">
 				<b>Camera Feed</b><br>
-				<img id="cameraFeed" src="http://localhost:8081/?action=stream">
+				<img id="cameraFeed">
 			</div>
 		</div>
 	</div>
@@ -388,6 +388,13 @@
 
 			function onPageLoad(){
 				console.log(window.location.hash);
+
+				// Build camera and default WebSocket URLs from whatever host actually
+				// served this page, rather than hardcoding an IP or using "localhost"
+				// (which in a browser always means the viewer's own machine, not the printer).
+				var host = window.location.hostname;
+				document.getElementById('cameraFeed').src = 'http://' + host + ':8081/?action=stream';
+				document.getElementById('url').value = 'ws://' + host + ':18188/';
 
 				if ("onhashchange" in window) // does the browser support the hashchange event?
 				window.onhashchange = function () {
