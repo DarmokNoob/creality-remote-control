@@ -88,9 +88,31 @@ For the camera feed setup, see [`printer-init/README.md`](printer-init/README.md
 ## Known limitations
 
 - A finished/stopped print (`PRINT_END` status) can currently only be
-  cleared by physically tapping the printer's touchscreen, or a full power
-  cycle — there's no remote command for it. Thoroughly investigated in
-  [`docs/touch-injection-notes.md`](docs/touch-injection-notes.md); not a
-  quick fix.
+  cleared by a full power cycle — there's no WebSocket command for it, and
+  touch injection to remotely tap the physical Back button was thoroughly
+  investigated and found not to work (see
+  [`docs/touch-injection-notes.md`](docs/touch-injection-notes.md)).
+  **Workaround:** a "Reboot Printer" button is included in the web UI —
+  triggers a real `reboot`, confirmed to reliably clear `PRINT_END` on
+  restart. Guarded client-side against accidental clicks while a print is
+  active, but not server-side (see `handleReboot` in `main.go` if a hard
+  server-side guard is ever wanted).
 - `halot-server` isn't yet wired into a boot-time init hook the way
   `mjpg_streamer` is — needs to be started manually after a reboot for now.
+
+## Planned: Home Assistant integration
+
+`main.go` has a stubbed `/api/status` route (`handleStatus`) that currently
+just returns `501 Not Implemented`. The plan is for `halot-server` to
+maintain its own WebSocket connection to `PrinterUI`
+(`ws://localhost:18188/`), poll `GET_PRINT_STATUS`, and expose the result
+as plain REST JSON. This avoids needing a custom Home Assistant component —
+HA's built-in RESTful sensor platform can poll a plain HTTP JSON endpoint
+directly from YAML config, whereas WebSocket sources in HA generally
+require writing a real custom integration.
+
+To implement: replicate the DES-ECB token logic from `index.html`'s
+`passToToken()` in Go (`crypto/des`, key `6138356539643638` hex-decoded,
+PKCS7 padding), open a `gorilla/websocket` (or stdlib-only) connection to
+`ws://localhost:18188/`, send `{"cmd":"GET_PRINT_STATUS","token":"..."}`,
+read one response, and return it as-is (or reshaped) from `handleStatus`.

@@ -8,3 +8,4 @@ test_adb.py
 __pycache__/
 *.pyc
 deploy.sh
+go-server/halot-server

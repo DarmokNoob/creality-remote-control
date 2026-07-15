@@ -171,6 +171,7 @@
 				<input type=submit value="Print" onClick="javascript:startPrint()">
 				<input type=submit value="Pause" onClick="javascript:sendCmd('PRINT_PAUSE')">
 				<input type=submit value="Stop" onClick="javascript:stopPrint()">
+			    <input type=submit value="Reboot Printer" onClick="javascript:rebootPrinter()" style="margin-left: 20px; color: #c0392b;">
 			</div><br>
 			
 			<div id = "fileStatus"></div><br>
@@ -522,6 +523,24 @@
 
 			function closeLightbox(){
 				document.getElementById('lightboxOverlay').classList.remove('active');
+			}
+
+			function rebootPrinter(){
+				if (lastPrintStatus === "PRINT_PROCESSING" || lastPrintStatus === "PRINT_PAUSE") {
+					alert("Cannot reboot while a print is active (" + lastPrintStatus + ").\n\nStop the current print first.");
+					return;
+				}
+
+				if (!confirm("Reboot the printer?\n\nThis will restart the touchscreen, camera feed, and this web UI. Useful for clearing a stuck PRINT_END state remotely.\n\nThe page will be unreachable for about a minute while it boots.")) return;
+
+				fetch('/api/reboot', { method: 'POST' })
+					.then(r => r.json())
+					.then(result => {
+						alert("Reboot triggered. Give it about a minute, then reload this page.");
+					})
+					.catch(err => {
+						alert("Reboot triggered (connection dropped as expected).");
+					});
 			}
 		</script>
    	</body>

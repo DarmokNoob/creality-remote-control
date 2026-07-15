@@ -1,17 +1,19 @@
 package main
 
 import (
-        "encoding/json"
-        "fmt"
-        "image"
-        "image/color"
-        "image/png"
-        "io"
-        "log"
-        "net/http"
-        "os"
-        "path/filepath"
-        "strings"
+	"encoding/json"
+	"fmt"
+	"image"
+	"image/color"
+	"image/png"
+	"io"
+	"log"
+	"net/http"
+	"os"
+	"os/exec"
+	"path/filepath"
+	"strings"
+	"time"
 )
 
 const (
@@ -232,6 +234,33 @@ func handleThumbnail(w http.ResponseWriter, r *http.Request) {
         png.Encode(w, img)
 }
 
+func handleReboot(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		writeJSONError(w, 405, "method not allowed")
+		return
+	}
+
+	writeJSON(w, map[string]string{"status": "rebooting"})
+
+	// Give the HTTP response time to actually flush to the client before
+	// the reboot kills this process.
+	go func() {
+		time.Sleep(500 * time.Millisecond)
+		exec.Command("reboot").Run()
+	}()
+}
+
+// handleStatus is a placeholder for a future feature: polling PrinterUI's
+// WebSocket API (ws://localhost:18188/) for GET_PRINT_STATUS and exposing
+// it as plain REST JSON, so tools like Home Assistant's RESTful sensor
+// platform can consume it without needing a custom WebSocket integration.
+//
+// Not implemented yet - returns 501 so callers get a clear, safe signal
+// rather than a broken/misleading response.
+func handleStatus(w http.ResponseWriter, r *http.Request) {
+	writeJSONError(w, 501, "status endpoint not yet implemented - see main.go handleStatus() for the plan")
+}
+
 func main() {
         mux := http.NewServeMux()
 
@@ -239,6 +268,8 @@ func main() {
         mux.HandleFunc("/api/udisk-files", handleUdiskFiles)
         mux.HandleFunc("/api/load-file", handleLoadFile)
         mux.HandleFunc("/api/thumbnail", handleThumbnail)
+		mux.HandleFunc("/api/reboot", handleReboot)
+		mux.HandleFunc("/api/status", handleStatus)
 
         fs := http.FileServer(http.Dir(staticDir))
         mux.Handle("/", fs)
