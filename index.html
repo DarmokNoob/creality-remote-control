@@ -200,6 +200,7 @@
 			var statusTimer;
 			var file;
 			var token;
+			var lastPrintStatus = null;
 	
 			document.getElementById('inputFile').addEventListener('change', function(e) {
 				  file = document.getElementById('inputFile').files[0];
@@ -226,6 +227,8 @@
 			}
 		
 			function printStatus(stat){
+				lastPrintStatus = stat.printStatus;
+
 				code = "";
 				code += "Status: " + stat.printStatus + "<br>\n";
 				code += "Filename: " + stat.filename + "<br>\n";
@@ -475,14 +478,25 @@
 					});
 
 					if (udiskFiles.length > 0) {
+						// Keep the global 'file' reference in sync with whatever's
+						// actually loaded on the printer, even on a fresh page load
+						// where no click has happened yet - otherwise Print silently
+						// does nothing because file.name is undefined.
+						file = {name: udiskFiles[0]};
 						showPreview(udiskFiles[0]);
 					} else {
+						file = null;
 						showPreview(null);
 					}
 				});
 			}
 
 			function loadFileToQueue(name){
+				if (lastPrintStatus === "PRINT_PROCESSING" || lastPrintStatus === "PRINT_PAUSE") {
+					alert("Cannot load a new file while a print is active (" + lastPrintStatus + ").\n\nStop the current print first.");
+					return;
+				}
+
 				if (!confirm("Load '" + name + "' from USB into the printer's queue?\n\nThis will replace any file currently loaded.")) return;
         		fetch('/api/load-file', {
                 	method: 'POST',
